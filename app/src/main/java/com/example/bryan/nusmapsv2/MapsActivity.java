@@ -29,6 +29,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
 import com.google.android.gms.location.places.ui.PlaceSelectionListener;
@@ -37,7 +38,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-
+import com.google.android.gms.maps.model.MarkerOptions;
 
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
@@ -66,11 +67,30 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         directionButton=(FloatingActionButton)findViewById(R.id.fab);
         directionButton.setOnClickListener(this);
 
+        //initialise places autocomplete search bar
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                //Get info about the selected place (returns instance of place)
+                Log.i(TAG, "Place: " + place.getName());
+                markerForSelected(place);
+            }
+
+            @Override
+            public void onError(Status status) {
+                //Handles error
+                Log.i(TAG, "An error occurred: " + status);
+            }
+        });
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
     }
+
 
      //This is where we can add markers or lines, add listeners or move the camera.
     @Override
@@ -229,6 +249,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             Intent intent = new Intent(this, DirectionsActivity.class); //transition to DirectionActivity when fab directionbutton is clicked
             startActivity(intent);
         }
+    }
+
+    //place marker and provides information on searched place in search bar
+    public void markerForSelected(Place place) {
+        mMap.clear(); //clear map of all markers
+        String name = (String) place.getName();
+        String address = (String) place.getAddress();
+        mMap.addMarker(new MarkerOptions() //add marker at searched location
+                .position(place.getLatLng())
+                .title(name)      //includes name and address
+                .snippet(address)
+        );
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(place.getLatLng())); //animate camera to marker
     }
 
 
