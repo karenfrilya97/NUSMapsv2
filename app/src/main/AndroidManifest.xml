@@ -42,7 +42,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".DirectionsActivity"></activity>
+        <activity android:name=".DirectionsActivity" />
+        <activity android:name=".RotaTask"></activity>
     </application>
 
 </manifest>

@@ -1,9 +1,12 @@
 package com.example.bryan.nusmapsv2;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
+import android.graphics.Camera;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
 import android.support.annotation.NonNull;
@@ -29,6 +32,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
@@ -37,15 +41,25 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
-        View.OnClickListener{
+        View.OnClickListener,
+        DirectionFinderListener{
 
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
@@ -54,6 +68,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     FloatingActionButton directionButton;
     private final int REQUEST_CHECK_SETTINGS = 0;
     private static final String TAG= "MainActivity";
+
+    //For directions
+    String origin;
+    String destination;
+    private ProgressDialog progressDialog;
+    private List<Marker> originMarkers = new ArrayList<>();
+    private List<Marker> destinationMarkers = new ArrayList<>();
+    private List<Polyline> polylinePaths = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +92,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //initialise places autocomplete search bar
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
+        autocompleteFragment.setBoundsBias(new LatLngBounds(
+                new LatLng(1.289090, 103.767136), //bias (not limit) search results to NUS region
+                new LatLng(1.310065, 103.786232)));
+
+        AutocompleteFilter countryFilter = new AutocompleteFilter.Builder()
+                .setCountry("SG")
+                .build();
+        autocompleteFragment.setFilter(countryFilter); //filter search results to Singapore
+
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {
@@ -84,6 +115,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.i(TAG, "An error occurred: " + status);
             }
         });
+
+        int test = getIntent().getIntExtra("TEST", 0);
+        if (test == 3) {
+            origin = getIntent().getStringExtra("FROM");
+            destination = getIntent().getStringExtra("TO");
+
+            try {
+                new DirectionFinder(this, origin, destination).execute();
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+        }
+
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -182,8 +227,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         LatLng latlng = new LatLng(location.getLatitude(), location.getLongitude());
 
         //move camera
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
+       // mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        //mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
 
         //stop location updates
         if (mGoogleApiClient != null)
@@ -246,7 +291,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onClick(View v) {
         if (v == directionButton) {
-            Intent intent = new Intent(this, DirectionsActivity.class); //transition to DirectionActivity when fab directionbutton is clicked
+            Intent intent = new Intent(this, DirectionsActivity.class); //transition to DirectionActivity when fab direction button is clicked
             startActivity(intent);
         }
     }
@@ -265,4 +310,61 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
+    @Override
+    public void onDirectionFinderStart() {
+        progressDialog = ProgressDialog.show(this, "Please wait.", "Finding directions..!", true);
+
+        if (originMarkers != null) {
+            for (Marker marker : originMarkers) {
+                marker.remove();
+            }
+        }
+
+        if (destinationMarkers != null) {
+            for (Marker marker : destinationMarkers) {
+                marker.remove();
+            }
+        }
+
+        if (polylinePaths != null) {
+            for (Polyline polyline:polylinePaths ) {
+                polyline.remove();
+            }
+        }
+    }
+
+    //handles camera & markers for directionsActivity
+    @Override
+    public void onDirectionFinderSuccess(List<Route> routes) {
+        progressDialog.dismiss();
+        polylinePaths = new ArrayList<>();
+        originMarkers = new ArrayList<>();
+        destinationMarkers = new ArrayList<>();
+
+        for (Route route : routes) {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(route.startLocation, 15));
+
+            originMarkers.add(mMap.addMarker(new MarkerOptions()
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                    .title(origin)
+                    .snippet(route.startAddress)
+                    .position(route.startLocation)));
+
+            destinationMarkers.add(mMap.addMarker(new MarkerOptions()
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                    .title(destination)
+                    .snippet(route.endAddress)
+                    .position(route.endLocation)));
+
+            PolylineOptions polylineOptions = new PolylineOptions().
+                    geodesic(true).
+                    color(Color.BLUE).
+                    width(10);
+
+            for (int i = 0; i < route.points.size(); i++)
+                polylineOptions.add(route.points.get(i));
+
+            polylinePaths.add(mMap.addPolyline(polylineOptions));
+        }
+    }
 }
