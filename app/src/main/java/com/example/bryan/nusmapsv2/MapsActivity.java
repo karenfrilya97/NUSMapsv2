@@ -5,15 +5,14 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -68,6 +67,9 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     FloatingActionButton directionButton;
     private final int REQUEST_CHECK_SETTINGS = 0;
     private static final String TAG= "MainActivity";
+    private LatLngBounds NUS = new LatLngBounds(
+            new LatLng(1.289090, 103.767136), new LatLng(1.310065, 103.786232));
+
 
     //For directions
     String origin;
@@ -92,9 +94,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //initialise places autocomplete search bar
         PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
 
-        autocompleteFragment.setBoundsBias(new LatLngBounds(
-                new LatLng(1.289090, 103.767136), //bias (not limit) search results to NUS region
-                new LatLng(1.310065, 103.786232)));
+        autocompleteFragment.setBoundsBias(NUS); //bias (not limit) search results to NUS region
 
         AutocompleteFilter countryFilter = new AutocompleteFilter.Builder()
                 .setCountry("SG")
@@ -155,6 +155,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
         }
+        mMap.setLatLngBoundsForCameraTarget(NUS);
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(NUS.getCenter(), 15));
     }
 
     protected synchronized void buildGoogleApiClient() {
