@@ -14,7 +14,7 @@
         android:layout_marginStart="35dp"
         android:layout_marginTop="30dp" />
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/startingPoint"
         android:layout_width="240dp"
         android:layout_height="40dp"
@@ -39,7 +39,7 @@
         android:layout_below="@+id/dots"
         android:layout_alignStart="@+id/location1"/>
 
-    <EditText
+    <AutoCompleteTextView
         android:id="@+id/destination"
         android:layout_width="240dp"
         android:layout_height="40dp"
