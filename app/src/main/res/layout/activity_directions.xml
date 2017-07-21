@@ -4,7 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#8E8E8E"
     tools:context="com.example.bryan.nusmapsv2.DirectionsActivity">
+
+    <ImageView
+        android:id="@+id/white"
+        android:background="#ffffff"
+        android:layout_width="match_parent"
+        android:layout_height="210dp" />
 
     <ImageButton
         android:id="@+id/location1"
@@ -16,7 +23,7 @@
 
     <AutoCompleteTextView
         android:id="@+id/startingPoint"
-        android:layout_width="240dp"
+        android:layout_width="270dp"
         android:layout_height="40dp"
         android:hint="Starting point"
         android:layout_alignTop="@+id/location1"
@@ -41,7 +48,7 @@
 
     <AutoCompleteTextView
         android:id="@+id/destination"
-        android:layout_width="240dp"
+        android:layout_width="270dp"
         android:layout_height="40dp"
         android:hint="Destination"
         android:layout_alignTop="@+id/location2"
@@ -62,8 +69,7 @@
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/location2"
-        android:layout_marginTop="30dp"
+        android:layout_alignBottom="@+id/white"
         android:background="#8DC34A" />
 
     <ImageView
@@ -98,29 +104,21 @@
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true" />
 
-    <ImageView
-        android:id="@+id/grey"
-        android:background="#8E8E8E"
-        android:layout_width="match_parent"
-        android:layout_height="397dp"
-        android:layout_below="@+id/greenLine" />
-
     <Button
         android:id="@+id/buttonCar"
         android:background="#C6C6C6"
         android:layout_width="330dp"
         android:layout_height="100dp"
-        android:layout_alignTop="@+id/grey"
-        android:layout_marginTop="15dp"
+        android:layout_below="@+id/greenLine"
+        android:layout_marginTop="30dp"
         android:layout_centerHorizontal="true"
         android:clickable="true"/>
 
-    <ImageView
+    <Button
         android:id="@+id/carIcon"
         android:background="@drawable/ic_directions_car_black_48dp"
         android:layout_width="70dp"
         android:layout_height="70dp"
-        android:translationZ="2dp"
         android:layout_alignTop="@+id/buttonCar"
         android:layout_marginTop="20dp"
         android:layout_centerHorizontal="true"/>
@@ -159,11 +157,11 @@
         android:layout_width="330dp"
         android:layout_height="100dp"
         android:layout_below="@+id/buttonCar"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="40dp"
         android:layout_centerHorizontal="true"
         android:clickable="true"/>
 
-    <ImageView
+    <Button
         android:id="@+id/walkIcon"
         android:background="@drawable/ic_directions_walk_black_48dp"
         android:layout_width="70dp"
@@ -207,11 +205,11 @@
         android:layout_width="330dp"
         android:layout_height="100dp"
         android:layout_below="@+id/walk"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="40dp"
         android:layout_centerHorizontal="true"
         android:clickable="true"/>
 
-    <ImageView
+    <Button
         android:id="@+id/busIcon"
         android:background="@drawable/ic_directions_bus_black_48dp"
         android:layout_width="70dp"
